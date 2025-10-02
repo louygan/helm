@@ -609,7 +609,7 @@ func deleteResource(info *resource.Info, policy metav1.DeletionPropagation) erro
 	return err
 }
 
-func createPatch(target *resource.Info, current runtime.Object) ([]byte, types.PatchType, error) {
+func (c *Client) createPatch(target *resource.Info, current runtime.Object) ([]byte, types.PatchType, error) {
 	oldData, err := json.Marshal(current)
 	if err != nil {
 		return nil, types.StrategicMergePatchType, errors.Wrap(err, "serializing current configuration")
@@ -646,6 +646,7 @@ func createPatch(target *resource.Info, current runtime.Object) ([]byte, types.P
 
 	if isUnstructured || isCRD {
 		// fall back to generic JSON merge patch
+		c.Log(" Using jsonpatch.CreateMergePatch")
 		patch, err := jsonpatch.CreateMergePatch(oldData, newData)
 		return patch, types.MergePatchType, err
 	}
@@ -655,6 +656,7 @@ func createPatch(target *resource.Info, current runtime.Object) ([]byte, types.P
 		return nil, types.StrategicMergePatchType, errors.Wrap(err, "unable to create patch metadata from object")
 	}
 
+	c.Log(" Using strategicpatch.CreateThreeWayMergePatch")
 	patch, err := strategicpatch.CreateThreeWayMergePatch(oldData, newData, currentData, patchMeta, true)
 	return patch, types.StrategicMergePatchType, err
 }
@@ -675,7 +677,8 @@ func updateResource(c *Client, target *resource.Info, currentObj runtime.Object,
 		}
 		c.Log("Replaced %q with kind %s for kind %s", target.Name, currentObj.GetObjectKind().GroupVersionKind().Kind, kind)
 	} else {
-		patch, patchType, err := createPatch(target, currentObj)
+		c.Log("createPatch %q with kind %s for kind %s", target.Name, currentObj.GetObjectKind().GroupVersionKind().Kind, kind)
+		patch, patchType, err := c.createPatch(target, currentObj)
 		if err != nil {
 			return errors.Wrap(err, "failed to create patch")
 		}
