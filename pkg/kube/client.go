@@ -632,6 +632,10 @@ func (c *Client) createPatch(target *resource.Info, current runtime.Object) ([]b
 		return nil, types.StrategicMergePatchType, errors.Wrap(err, "serializing live configuration")
 	}
 
+	c.Log("Data_old: %s\n", oldData)
+	c.Log("Date_new: %s\n", newData)
+	c.Log("Data_current: %s\n", currentData)
+	
 	// Get a versioned object
 	versionedObject := AsVersioned(target)
 
@@ -646,8 +650,9 @@ func (c *Client) createPatch(target *resource.Info, current runtime.Object) ([]b
 
 	if isUnstructured || isCRD {
 		// fall back to generic JSON merge patch
-		c.Log(" Using jsonpatch.CreateMergePatch")
+		c.Log("= Patchmethod jsonpatch.CreateMergePatch =")
 		patch, err := jsonpatch.CreateMergePatch(oldData, newData)
+		c.Log("createPatch patch: %s\n", patch)
 		return patch, types.MergePatchType, err
 	}
 
@@ -656,8 +661,9 @@ func (c *Client) createPatch(target *resource.Info, current runtime.Object) ([]b
 		return nil, types.StrategicMergePatchType, errors.Wrap(err, "unable to create patch metadata from object")
 	}
 
-	c.Log(" Using strategicpatch.CreateThreeWayMergePatch")
+	c.Log("= PatchMethod strategicpatch.CreateThreeWayMergePatch =")
 	patch, err := strategicpatch.CreateThreeWayMergePatch(oldData, newData, currentData, patchMeta, true)
+	c.Log("createPatch patch: %s\n", patch)
 	return patch, types.StrategicMergePatchType, err
 }
 
