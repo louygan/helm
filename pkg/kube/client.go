@@ -632,9 +632,9 @@ func (c *Client) createPatch(target *resource.Info, current runtime.Object) ([]b
 		return nil, types.StrategicMergePatchType, errors.Wrap(err, "serializing live configuration")
 	}
 
-	c.Log("Data_old: %s\n", oldData)
-	c.Log("Date_new: %s\n", newData)
-	c.Log("Data_current: %s\n", currentData)
+	c.Log("\nData_old: %s", oldData)
+	c.Log("\nDate_new: %s", newData)
+	c.Log("\nData_current: %s", currentData)
 	
 	// Get a versioned object
 	versionedObject := AsVersioned(target)
@@ -661,9 +661,9 @@ func (c *Client) createPatch(target *resource.Info, current runtime.Object) ([]b
 		return nil, types.StrategicMergePatchType, errors.Wrap(err, "unable to create patch metadata from object")
 	}
 
-	c.Log("= PatchMethod strategicpatch.CreateThreeWayMergePatch =")
+	c.Log("\n= PatchMethod strategicpatch.CreateThreeWayMergePatch =")
 	patch, err := strategicpatch.CreateThreeWayMergePatch(oldData, newData, currentData, patchMeta, true)
-	c.Log("createPatch patch: %s\n", patch)
+	c.Log("created patch: %s\n", patch)
 	return patch, types.StrategicMergePatchType, err
 }
 
@@ -699,7 +699,7 @@ func updateResource(c *Client, target *resource.Info, currentObj runtime.Object,
 			return nil
 		}
 		// send patch to server
-		c.Log("Patch %s %q in namespace %s", kind, target.Name, target.Namespace)
+		c.Log("\nPatch %s %q in namespace %s", kind, target.Name, target.Namespace)
 		obj, err = helper.Patch(target.Namespace, target.Name, patchType, patch, nil)
 		if err != nil {
 			return errors.Wrapf(err, "cannot patch %q with kind %s", target.Name, kind)
